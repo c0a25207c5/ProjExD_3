@@ -143,6 +143,9 @@ class Bomb:
 
 class Score:
     def __init__(self):
+        """
+        表示する文字列の作成
+        """
         self.fonto = pg.font.Font(None, 50)
         self.score = 0
         self.img = self.fonto.render("Score:",0,(0,0,255))
@@ -150,6 +153,9 @@ class Score:
         self.rct.center = (100, HEIGHT - 50)
 
     def update(self, screen: pg.Surface):
+        """
+        変更されたスコアを画面へ表示する
+        """
         self.img = self.fonto.render(f"Score:{self.score}",0,(0,0,255))
         screen.blit(self.img, self.rct)
 
@@ -164,8 +170,11 @@ def main():
     # for _ in range(NUM_OF_BOMBS):
     #     bombs.append(Bomb((255, 0, 0), 10))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
-    beam = None  # ゲーム初期化時にはビームは存在しない
-    score =Score()  # スコアインスタンス生成
+    # beam = None  # ゲーム初期化時にはビームは存在しない
+
+    beams = []  # 追加機能２ビームを保持するリスト
+
+    score =Score()  # 追加機能１スコアインスタンス生成
 
     clock = pg.time.Clock()
     tmr = 0
@@ -175,7 +184,7 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beams.append(Beam(bird))  # 追加機能２ビームをリストへ加える            
         screen.blit(bg_img, [0, 0])
 
         for bomb in bombs:
@@ -190,23 +199,30 @@ def main():
                 return
 
         for i, bomb in enumerate(bombs):
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct):  # ビームと爆弾の衝突判定
-                    beam = None
-                    bombs[i] = None
-                    bird.change_img(6, screen)  # よろこびエフェクト
-                    score.score += 1  # スコア加算
-                    pg.display.update()                    
+            for j, beam in enumerate(beams):
+                if beam is not None and bomb is not None:
+                    if beam.rct.colliderect(bomb.rct):  # ビームと爆弾の衝突判定
+                        beam = None
+                        bombs[i] = None
+                        beams[j] = None
+                        bird.change_img(6, screen)  # よろこびエフェクト
+                        score.score += 1  # 追加機能１スコア加算
+                        pg.display.update()                    
         bombs = [bomb for bomb in bombs if bomb is not None]  # Noneを取り除く
+        beams = [beam for beam in beams if beam is not None]  # 追加機能２Noneを取り除く
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None:
-            beam.update(screen)  
+
+        beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]  # 追加機能２画面外に出たビームを取り除く
+
+        for beam in beams:
+            beam.update(screen)
+        
         for bomb in bombs: 
             bomb.update(screen)
             
-        score.update(screen)  # スコアの更新
+        score.update(screen)  # 追加機能１スコアの更新
         pg.display.update()
         tmr += 1
         clock.tick(50)
