@@ -141,7 +141,7 @@ class Bomb:
         screen.blit(self.img, self.rct)
 
 
-class Score:
+class Score:  # 追加機能１　スコアの表示。関数
     def __init__(self):
         """
         表示する文字列の作成
